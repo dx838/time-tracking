@@ -12,8 +12,9 @@ use windows::Win32::System::Threading::{
 };
 use windows::Win32::UI::Input::KeyboardAndMouse::{GetLastInputInfo, LASTINPUTINFO};
 use windows::Win32::UI::WindowsAndMessaging::{
-    GetAncestor, GetClassNameW, GetForegroundWindow, GetWindowTextW, GetWindowThreadProcessId,
-    IsIconic, IsWindow, IsWindowVisible, GA_ROOTOWNER,
+    GetAncestor, GetClassNameW, GetForegroundWindow, GetWindow, GetWindowLongPtrW,
+    GetWindowTextW, GetWindowThreadProcessId, IsIconic, IsWindow, IsWindowVisible, GA_ROOTOWNER,
+    GW_OWNER, GWL_EXSTYLE, WS_EX_TOOLWINDOW,
 };
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -83,6 +84,9 @@ pub fn get_active_window() -> WindowInfo {
         if !has_resolved_window_process(process_id, &exe_name) {
             return build_inactive_window(idle_time, is_afk);
         }
+        if should_treat_shell_surface_as_inactive(root_owner_hwnd, &exe_name, &window_class) {
+            return build_inactive_window(idle_time, is_afk);
+        }
 
         WindowInfo {
             hwnd: format_hwnd(hwnd),
@@ -125,6 +129,42 @@ unsafe fn should_treat_window_as_inactive(hwnd: HWND) -> bool {
 
 fn has_resolved_window_process(process_id: u32, exe_name: &str) -> bool {
     process_id != 0 && !exe_name.trim().is_empty()
+}
+
+unsafe fn should_treat_shell_surface_as_inactive(
+    root_owner_hwnd: HWND,
+    exe_name: &str,
+    window_class: &str,
+) -> bool {
+    if !exe_name.eq_ignore_ascii_case("explorer.exe") {
+        return false;
+    }
+
+    let class_key = window_class.to_ascii_lowercase();
+    if !matches!(class_key.as_str(), "cabinetwclass" | "explorewclass") {
+        return true;
+    }
+
+    !is_application_top_level_window(root_owner_hwnd)
+}
+
+unsafe fn is_application_top_level_window(hwnd: HWND) -> bool {
+    if should_treat_window_as_inactive(hwnd) {
+        return false;
+    }
+
+    if let Ok(owner) = GetWindow(hwnd, GW_OWNER) {
+        if !owner.0.is_null() {
+            return false;
+        }
+    }
+
+    let extended_style = GetWindowLongPtrW(hwnd, GWL_EXSTYLE) as u32;
+    if (extended_style & WS_EX_TOOLWINDOW.0) != 0 {
+        return false;
+    }
+
+    true
 }
 
 unsafe fn get_root_owner_window(hwnd: HWND) -> HWND {
@@ -263,7 +303,8 @@ pub fn get_current_active_window() -> WindowInfo {
 #[cfg(test)]
 mod tests {
     use super::{
-        build_inactive_window, has_resolved_window_process, should_treat_window_as_inactive,
+        build_inactive_window, has_resolved_window_process, is_application_top_level_window,
+        should_treat_shell_surface_as_inactive, should_treat_window_as_inactive,
     };
     use windows::Win32::Foundation::HWND;
 
@@ -289,5 +330,23 @@ mod tests {
         assert!(!has_resolved_window_process(0, ""));
         assert!(!has_resolved_window_process(42, ""));
         assert!(has_resolved_window_process(42, "Code.exe"));
+    }
+
+    #[test]
+    fn explorer_shell_surfaces_are_not_trackable_foreground_windows() {
+        assert!(unsafe {
+            should_treat_shell_surface_as_inactive(HWND::default(), "explorer.exe", "Progman")
+        });
+        assert!(unsafe {
+            should_treat_shell_surface_as_inactive(HWND::default(), "explorer.exe", "WorkerW")
+        });
+        assert!(!unsafe {
+            should_treat_shell_surface_as_inactive(HWND::default(), "Code.exe", "Progman")
+        });
+    }
+
+    #[test]
+    fn null_handle_is_not_an_application_top_level_window() {
+        assert!(!unsafe { is_application_top_level_window(HWND::default()) });
     }
 }

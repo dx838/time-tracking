@@ -16,13 +16,12 @@ interface Props {
   onRegisterSaveHandler?: (handler: (() => Promise<boolean>) | null) => void;
 }
 
-const FILTER_OPTIONS: Array<{ value: CandidateFilter; label: string }> = [
-  { value: "all", label: UI_TEXT.mapping.filters.all },
-  { value: "other", label: UI_TEXT.mapping.filters.other },
-  { value: "classified", label: UI_TEXT.mapping.filters.classified },
-];
-
 export default function AppMapping(props: Props) {
+  const filterOptions: Array<{ value: CandidateFilter; label: string }> = [
+    { value: "all", label: UI_TEXT.mapping.filters.all },
+    { value: "other", label: UI_TEXT.mapping.filters.other },
+    { value: "classified", label: UI_TEXT.mapping.filters.classified },
+  ];
   const {
     dialogs,
     loading,
@@ -132,7 +131,7 @@ export default function AppMapping(props: Props) {
           <QuietSegmentedFilter
             value={filter}
             onChange={setFilter}
-            options={FILTER_OPTIONS.map((item) => {
+            options={filterOptions.map((item) => {
               const count = item.value === "all"
                 ? counts.all
                 : item.value === "other"

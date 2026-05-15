@@ -19,12 +19,6 @@ pub fn should_track(exe_name: &str) -> bool {
         "time_tracker.exe"
             | "time-tracker.exe"
             | "un.exe"
-            | "powershell.exe"
-            | "pwsh.exe"
-            | "cmd.exe"
-            | "windowsterminal.exe"
-            | "wt.exe"
-            | "explorer.exe"
             | "taskmgr.exe"
             | "regedit.exe"
             | "mmc.exe"
@@ -69,6 +63,40 @@ pub fn should_track(exe_name: &str) -> bool {
     }
 
     true
+}
+
+fn is_trackable_explorer_window(window: WindowTrackingCandidate<'_>) -> bool {
+    if window.exe_name.to_lowercase() != "explorer.exe" {
+        return true;
+    }
+
+    matches!(
+        window.window_class.to_lowercase().as_str(),
+        "cabinetwclass" | "explorewclass"
+    )
+}
+
+fn is_desktop_shell_window(window: WindowTrackingCandidate<'_>) -> bool {
+    let lower_name = window.exe_name.to_lowercase();
+    let has_title = !window.title.trim().is_empty();
+    if !has_title
+        && matches!(
+            lower_name.as_str(),
+            "ui32.exe" | "wallpaper32.exe" | "wallpaper64.exe" | "wallpaperengine.exe"
+        )
+    {
+        return true;
+    }
+
+    matches!(
+        window.window_class.to_lowercase().as_str(),
+        "progman"
+            | "workerw"
+            | "shelldll_defview"
+            | "syslistview32"
+            | "shell_traywnd"
+            | "shell_secondarytraywnd"
+    )
 }
 
 pub fn sustained_participation_app_identity(
@@ -677,7 +705,7 @@ fn is_likely_system_process(lower_name: &str) -> bool {
                 || lower_name.contains("fontdrv")))
         || lower_name.ends_with("broker.exe")
         || lower_name.ends_with("systray.exe")
-        || matches!(lower_name, "svchost.exe" | "dllhost.exe" | "conhost.exe")
+        || matches!(lower_name, "svchost.exe" | "dllhost.exe")
 }
 
 #[cfg(test)]
@@ -773,10 +801,22 @@ mod tests {
         assert!(!should_track("obsidian-setup.exe"));
         assert!(!should_track("cursor-updater.exe"));
         assert!(!should_track("bscccloud-3.33.0.tmp"));
+        assert!(should_track("ui32.exe"));
+        assert!(should_track("wallpaper32.exe"));
+        assert!(should_track("wallpaper64.exe"));
+        assert!(should_track("wallpaperengine.exe"));
         assert!(should_track("geek.exe"));
         assert!(should_track("geek-uninstaller.exe"));
         assert!(should_track("bcuninstaller.exe"));
         assert!(should_track("Antigravity.exe"));
+        assert!(should_track("cmd.exe"));
+        assert!(should_track("powershell.exe"));
+        assert!(should_track("pwsh.exe"));
+        assert!(should_track("windowsterminal.exe"));
+        assert!(should_track("wt.exe"));
+        assert!(should_track("conhost.exe"));
+        assert!(should_track("openconsole.exe"));
+        assert!(should_track("explorer.exe"));
     }
 
     #[test]
@@ -1056,9 +1096,15 @@ mod tests {
         let installer = WindowTrackingCandidate::from_window_fields(
             "alma-0.0.750-win-x64.exe",
             "Alma 安装",
+            "Chrome_WidgetWin_1",
             false,
         );
-        let app = WindowTrackingCandidate::from_window_fields("Alma.exe", "Alma", false);
+        let app = WindowTrackingCandidate::from_window_fields(
+            "Alma.exe",
+            "Alma",
+            "Chrome_WidgetWin_1",
+            false,
+        );
 
         assert!(!is_trackable_window(Some(installer)));
         assert!(is_trackable_window(Some(app)));

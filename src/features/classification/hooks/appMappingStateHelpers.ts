@@ -1,6 +1,7 @@
 import type { CandidateFilter, ObservedAppCandidate } from "../types.ts";
 import type { UserAssignableAppCategory } from "../config/categoryTokens.ts";
 import type { AppOverride } from "../services/classificationService.ts";
+import { getUiLocale } from "../../../shared/copy/uiText.ts";
 import {
   cloneClassificationDraftState,
   type ClassificationDraftState,
@@ -8,10 +9,12 @@ import {
 
 export const AUTO_CATEGORY_VALUE = "__auto__";
 
-const APP_MAPPING_COLLATOR = new Intl.Collator("zh-CN", {
-  numeric: true,
-  sensitivity: "base",
-});
+function createAppMappingCollator() {
+  return new Intl.Collator(getUiLocale(), {
+    numeric: true,
+    sensitivity: "base",
+  });
+}
 
 type AppMappingOverrideParams = {
   category?: UserAssignableAppCategory;
@@ -90,6 +93,8 @@ export function filterAndSortCandidates({
   resolveMappedCategory,
   resolveEffectiveDisplayName,
 }: FilterAndSortCandidatesParams): ObservedAppCandidate[] {
+  const collator = createAppMappingCollator();
+
   return candidates
     .filter((candidate) => {
       const category = resolveMappedCategory(candidate);
@@ -98,13 +103,13 @@ export function filterAndSortCandidates({
       return category !== "other";
     })
     .sort((left, right) => {
-      const labelCompare = APP_MAPPING_COLLATOR.compare(
+      const labelCompare = collator.compare(
         resolveEffectiveDisplayName(left),
         resolveEffectiveDisplayName(right),
       );
       if (labelCompare !== 0) {
         return labelCompare;
       }
-      return APP_MAPPING_COLLATOR.compare(left.exeName, right.exeName);
+      return collator.compare(left.exeName, right.exeName);
     });
 }

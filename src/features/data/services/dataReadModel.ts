@@ -6,7 +6,7 @@ import {
   getRollingDayRanges,
   type SessionRange,
 } from "../../../shared/lib/sessionReadCompiler.ts";
-import { UI_TEXT } from "../../../shared/copy/uiText.ts";
+import { getUiLocale, UI_TEXT } from "../../../shared/copy/uiText.ts";
 
 export type { HistorySession };
 
@@ -111,12 +111,6 @@ export interface DataHeatmapDependencies {
 const RECENT_HEATMAP_WEEK_COUNT = 53;
 const heatmapSessionCache = new Map<string, HistorySession[]>();
 let earliestSessionStartTimeCache: number | null | undefined;
-const DATA_TREND_RANGE_LABELS: Record<DataTrendRange, string> = {
-  7: UI_TEXT.data.pastSevenDays,
-  30: UI_TEXT.data.pastThirtyDays,
-  365: UI_TEXT.data.recentYear,
-};
-
 function startOfLocalDay(date: Date) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
@@ -136,7 +130,7 @@ function toDateKey(date: Date) {
 
 function formatHeatmapDateLabel(dateKey: string) {
   const date = new Date(`${dateKey}T00:00:00`);
-  return date.toLocaleDateString("zh-CN", { month: "2-digit", day: "2-digit" });
+  return date.toLocaleDateString(getUiLocale(), { month: "2-digit", day: "2-digit" });
 }
 
 function formatDuration(durationMs: number) {
@@ -179,7 +173,7 @@ function formatMonthLabel(monthKey: string) {
 
 function formatAppDayLabel(dateKey: string) {
   const date = new Date(`${dateKey}T00:00:00`);
-  return date.toLocaleDateString("zh-CN", { month: "2-digit", day: "2-digit", weekday: "short" });
+  return date.toLocaleDateString(getUiLocale(), { month: "2-digit", day: "2-digit", weekday: "short" });
 }
 
 function getRecentMonthRanges(nowMs: number, monthCount: number): SessionRange[] {
@@ -255,7 +249,9 @@ function resolveAppKeyByStats(
 }
 
 export function getDataTrendRangeLabel(range: DataTrendRange) {
-  return DATA_TREND_RANGE_LABELS[range];
+  if (range === 7) return UI_TEXT.data.pastSevenDays;
+  if (range === 30) return UI_TEXT.data.pastThirtyDays;
+  return UI_TEXT.data.recentYear;
 }
 
 export function buildDataTrendViewModel(

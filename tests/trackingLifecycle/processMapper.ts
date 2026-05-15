@@ -11,6 +11,7 @@ import {
   runTest,
   shouldTrackProcess,
 } from "./shared.ts";
+import { setUiTextLanguage } from "../../src/shared/copy/uiText.ts";
 
 export function runProcessMapperTests() {
   runTest("system windows processes are excluded from tracking", () => {
@@ -19,6 +20,56 @@ export function runProcessMapperTests() {
     assert.equal(ProcessMapper.shouldTrack("Consent.exe"), false);
     assert.equal(ProcessMapper.shouldTrack("PickerHost.exe"), false);
     assert.equal(ProcessMapper.shouldTrack("Antigravity.exe"), true);
+  });
+
+  runTest("terminal apps are treated as normal development tools", () => {
+    for (
+      const exeName of [
+        "cmd.exe",
+        "powershell.exe",
+        "pwsh.exe",
+        "windowsterminal.exe",
+        "wt.exe",
+        "conhost.exe",
+        "openconsole.exe",
+      ]
+    ) {
+      assert.equal(shouldTrackProcess(exeName), true);
+      assert.equal(ProcessMapper.shouldTrack(exeName), true);
+      assert.equal(ProcessMapper.map(exeName).category, "development");
+    }
+  });
+
+  runTest("file explorer is treated as a normal utility app", () => {
+    ProcessMapper.clearUserOverrides();
+    assert.equal(shouldTrackProcess("explorer.exe"), true);
+    assert.equal(ProcessMapper.shouldTrack("explorer.exe"), true);
+    assert.equal(ProcessMapper.map("explorer.exe").category, "utility");
+
+    setUiTextLanguage("zh-CN");
+    assert.equal(ProcessMapper.map("explorer.exe").name, "文件资源管理器");
+
+    setUiTextLanguage("en-US");
+    assert.equal(ProcessMapper.map("explorer.exe").name, "File Explorer");
+
+    ProcessMapper.setUserOverride("explorer.exe", {
+      displayName: "Files",
+      enabled: true,
+      updatedAt: Date.now(),
+    });
+    setUiTextLanguage("zh-CN");
+    assert.equal(ProcessMapper.map("explorer.exe").name, "Files");
+
+    ProcessMapper.clearUserOverrides();
+    setUiTextLanguage("zh-CN");
+  });
+
+  runTest("wallpaper engine app windows remain trackable utilities", () => {
+    for (const exeName of ["ui32.exe", "wallpaper32.exe", "wallpaper64.exe", "wallpaperengine.exe"]) {
+      assert.equal(shouldTrackProcess(exeName), true);
+      assert.equal(ProcessMapper.shouldTrack(exeName), true);
+      assert.equal(ProcessMapper.map(exeName).category, "utility");
+    }
   });
 
   runTest("process mapper can exclude an app from tracking via override", () => {
@@ -120,6 +171,14 @@ export function runProcessMapperTests() {
       const mapped = ProcessMapper.map(item.exeName, { appName: item.appName });
       assert.equal(mapped.category, item.expectedCategory);
     }
+  });
+
+  runTest("known default apps prefer stable display names over raw metadata names", () => {
+    ProcessMapper.clearUserOverrides();
+    const mapped = ProcessMapper.map("windowsterminal.exe", { appName: "WindowsTerminal" });
+
+    assert.equal(mapped.name, "Windows Terminal");
+    assert.equal(mapped.category, "development");
   });
 
   runTest("display name overrides propagate into compiled app stats", () => {

@@ -16,7 +16,7 @@ import {
 import { openExternalUrl } from "../../../platform/desktop/externalUrlGateway.ts";
 import { emitAppSettingsChanged } from "../../../platform/runtime/appSettingsEventGateway.ts";
 import { setAfkThreshold } from "../../../platform/runtime/trackingRuntimeGateway.ts";
-import { UI_TEXT } from "../../../shared/copy/uiText.ts";
+import { getUiLocale, UI_TEXT } from "../../../shared/copy/uiText.ts";
 import type { CleanupRange } from "../types.ts";
 import {
   buildSessionCleanupPlan,
@@ -58,7 +58,7 @@ const RELEASE_NOTES_URL = "https://github.com/Ceceliaee/time-tracking/releases";
 const FEEDBACK_URL = "https://github.com/Ceceliaee/time-tracking/issues/new/choose";
 
 function buildBackupPreviewSummary(preview: BackupPreview): string {
-  const exportedAt = new Date(preview.exportedAtMs).toLocaleString();
+  const exportedAt = new Date(preview.exportedAtMs).toLocaleString(getUiLocale());
   return [
     `${UI_TEXT.backup.versionLabel(preview.version)}（${UI_TEXT.backup.schemaLabel(preview.schemaVersion)}）`,
     UI_TEXT.backup.exportedAt(exportedAt),

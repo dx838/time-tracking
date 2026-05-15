@@ -1,7 +1,9 @@
 import type { AppCategory } from "./categoryTokens.ts";
+import type { UiLanguage } from "../copy/uiText.ts";
 
 export interface DefaultAppMapping {
   name: string;
+  localizedNames?: Partial<Record<UiLanguage, string>>;
   category: AppCategory;
 }
 
@@ -74,12 +76,18 @@ export const DEFAULT_APP_MAPPINGS: Record<string, DefaultAppMapping> = {
   "neteasemusic.exe": { name: "NetEase Music", category: "music" },
   "hoyoplay.exe": { name: "HoYoPlay", category: "game" },
 
-  "powershell.exe": { name: "PowerShell", category: "system" },
-  "pwsh.exe": { name: "PowerShell 7", category: "system" },
-  "cmd.exe": { name: "Command Prompt", category: "system" },
-  "windowsterminal.exe": { name: "Windows Terminal", category: "system" },
-  "wt.exe": { name: "Windows Terminal", category: "system" },
-  "explorer.exe": { name: "File Explorer", category: "system" },
+  "powershell.exe": { name: "PowerShell", category: "development" },
+  "pwsh.exe": { name: "PowerShell 7", category: "development" },
+  "cmd.exe": { name: "Command Prompt", category: "development" },
+  "windowsterminal.exe": { name: "Windows Terminal", category: "development" },
+  "wt.exe": { name: "Windows Terminal", category: "development" },
+  "conhost.exe": { name: "Console Host", category: "development" },
+  "openconsole.exe": { name: "OpenConsole", category: "development" },
+  "explorer.exe": { name: "File Explorer", localizedNames: { "zh-CN": "文件资源管理器" }, category: "utility" },
+  "ui32.exe": { name: "Wallpaper Engine", category: "utility" },
+  "wallpaper32.exe": { name: "Wallpaper Engine", category: "utility" },
+  "wallpaper64.exe": { name: "Wallpaper Engine", category: "utility" },
+  "wallpaperengine.exe": { name: "Wallpaper Engine", category: "utility" },
   "taskmgr.exe": { name: "Task Manager", category: "system" },
   "regedit.exe": { name: "Registry Editor", category: "system" },
   "mmc.exe": { name: "Microsoft Management Console", category: "system" },

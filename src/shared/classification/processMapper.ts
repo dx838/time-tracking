@@ -9,7 +9,7 @@ import {
 import { DEFAULT_APP_MAPPINGS } from "./defaultMappings.ts";
 import { resolveCanonicalExecutable, shouldTrackProcess } from "./processNormalization.ts";
 import { CategoryColorRegistry } from "./categoryColorRegistry.ts";
-import { UI_TEXT } from "../copy/uiText.ts";
+import { getUiTextLanguage, UI_TEXT } from "../copy/uiText.ts";
 
 export type MappingConfidence = "high" | "medium" | "low";
 
@@ -102,6 +102,10 @@ function classifyByKeywords(canonicalExe: string, hints: MappingHints): AppCateg
   }
 
   return null;
+}
+
+function resolveDefaultMappingName(defaultMapping: { name: string; localizedNames?: Partial<Record<string, string>> }) {
+  return defaultMapping.localizedNames?.[getUiTextLanguage()] ?? defaultMapping.name;
 }
 
 function normalizeUserAssignableCategory(category: string | undefined): UserAssignableAppCategory | null {
@@ -288,7 +292,7 @@ export class ProcessMapper {
     if (defaultMapping) {
       const mappedCategory = override?.category ?? defaultMapping.category;
       const category = this.categoryColors.resolveActiveCategory(mappedCategory);
-      const name = override?.displayName || normalizeDisplayName(hints.appName) || defaultMapping.name;
+      const name = override?.displayName || resolveDefaultMappingName(defaultMapping);
       return {
         name,
         category,

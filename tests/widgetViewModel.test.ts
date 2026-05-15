@@ -89,8 +89,8 @@ const ACTIVE_WINDOW: TrackingWindowSnapshot = {
 
 const UNTRACKED_WINDOW: TrackingWindowSnapshot = {
   ...ACTIVE_WINDOW,
-  exeName: "explorer.exe",
-  processPath: "C:/Windows/explorer.exe",
+  exeName: "PickerHost.exe",
+  processPath: "C:/Windows/System32/PickerHost.exe",
 };
 
 const WIDGET_WINDOW: TrackingWindowSnapshot = {

@@ -152,5 +152,10 @@ pub(crate) fn is_trackable_window(window: Option<&tracker::WindowInfo>) -> bool 
 }
 
 fn to_tracking_candidate(window: &tracker::WindowInfo) -> WindowTrackingCandidate<'_> {
-    WindowTrackingCandidate::from_window_fields(&window.exe_name, &window.title, window.is_afk)
+    WindowTrackingCandidate::from_window_fields(
+        &window.exe_name,
+        &window.title,
+        &window.window_class,
+        window.is_afk,
+    )
 }

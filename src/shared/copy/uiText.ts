@@ -924,14 +924,26 @@ export const COPY: Record<UiLanguage, UiText> = {
   "en-US": EN_US_UI_TEXT,
 };
 
+export const SUPPORTED_UI_LANGUAGES = Object.keys(COPY) as UiLanguage[];
+
+let activeUiLanguage: UiLanguage = "zh-CN";
 let activeUiText: UiText = ZH_CN_UI_TEXT;
 
 export function getUiText(language: UiLanguage): UiText {
   return COPY[language] ?? ZH_CN_UI_TEXT;
 }
 
+export function getUiTextLanguage(): UiLanguage {
+  return activeUiLanguage;
+}
+
+export function getUiLocale(): UiLanguage {
+  return activeUiLanguage;
+}
+
 export function setUiTextLanguage(language: UiLanguage): void {
-  activeUiText = getUiText(language);
+  activeUiLanguage = COPY[language] ? language : "zh-CN";
+  activeUiText = getUiText(activeUiLanguage);
 }
 
 export const UI_TEXT: UiText = new Proxy({} as UiText, {

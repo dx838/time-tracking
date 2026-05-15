@@ -1,5 +1,5 @@
 import type { DailySummary } from "../../../shared/types/sessions.ts";
-import { UI_TEXT } from "../../../shared/copy/uiText.ts";
+import { getUiLocale, UI_TEXT } from "../../../shared/copy/uiText.ts";
 
 export interface HistoryChartPoint {
   day: string;
@@ -20,7 +20,7 @@ export function formatDuration(ms: number) {
 }
 
 export function formatTime(ts: number) {
-  return new Date(ts).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
+  return new Date(ts).toLocaleTimeString(getUiLocale(), { hour: "2-digit", minute: "2-digit" });
 }
 
 export function formatDateLabel(date: Date) {
@@ -31,7 +31,7 @@ export function formatDateLabel(date: Date) {
   if (date.toDateString() === today.toDateString()) return UI_TEXT.date.today;
   if (date.toDateString() === yesterday.toDateString()) return UI_TEXT.date.yesterday;
 
-  return date.toLocaleDateString("zh-CN", { month: "short", day: "numeric" });
+  return date.toLocaleDateString(getUiLocale(), { month: "short", day: "numeric" });
 }
 
 export function buildChartData(weekly: DailySummary[]): HistoryChartPoint[] {

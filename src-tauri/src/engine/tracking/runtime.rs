@@ -340,6 +340,53 @@ mod tests {
     }
 
     #[test]
+    fn file_explorer_window_is_trackable_but_desktop_shell_is_not() {
+        let file_explorer = make_window(&[
+            ("exe_name", "explorer.exe"),
+            ("process_path", r"C:\Windows\explorer.exe"),
+            ("window_class", "CabinetWClass"),
+            ("title", "Downloads"),
+        ]);
+        let desktop_shell = make_window(&[
+            ("exe_name", "explorer.exe"),
+            ("process_path", r"C:\Windows\explorer.exe"),
+            ("window_class", "Progman"),
+            ("title", "Program Manager"),
+        ]);
+        let taskbar_shell = make_window(&[
+            ("exe_name", "explorer.exe"),
+            ("process_path", r"C:\Windows\explorer.exe"),
+            ("window_class", "Shell_TrayWnd"),
+            ("title", ""),
+        ]);
+        let wallpaper_shell = make_window(&[
+            ("exe_name", "ui32.exe"),
+            ("process_path", r"C:\Program Files (x86)\Steam\steamapps\common\wallpaper_engine\ui32.exe"),
+            ("window_class", "WorkerW"),
+            ("title", ""),
+        ]);
+        let wallpaper_host = make_window(&[
+            ("exe_name", "ui32.exe"),
+            ("process_path", r"C:\Program Files (x86)\Steam\steamapps\common\wallpaper_engine\ui32.exe"),
+            ("window_class", "Chrome_WidgetWin_1"),
+            ("title", ""),
+        ]);
+        let wallpaper_app = make_window(&[
+            ("exe_name", "ui32.exe"),
+            ("process_path", r"C:\Program Files (x86)\Steam\steamapps\common\wallpaper_engine\ui32.exe"),
+            ("window_class", "Chrome_WidgetWin_1"),
+            ("title", "Wallpaper Engine"),
+        ]);
+
+        assert!(transition::is_trackable_window(Some(&file_explorer)));
+        assert!(!transition::is_trackable_window(Some(&desktop_shell)));
+        assert!(!transition::is_trackable_window(Some(&taskbar_shell)));
+        assert!(!transition::is_trackable_window(Some(&wallpaper_shell)));
+        assert!(!transition::is_trackable_window(Some(&wallpaper_host)));
+        assert!(transition::is_trackable_window(Some(&wallpaper_app)));
+    }
+
+    #[test]
     fn same_app_different_window_refreshes_metadata_without_splitting_session() {
         let previous = make_window(&[
             ("hwnd", "0x100"),
@@ -379,6 +426,15 @@ mod tests {
             "FooExperienceHost.exe"
         ));
         assert!(!crate::domain::tracking::should_track("svchost.exe"));
+        assert!(crate::domain::tracking::should_track("cmd.exe"));
+        assert!(crate::domain::tracking::should_track("powershell.exe"));
+        assert!(crate::domain::tracking::should_track("pwsh.exe"));
+        assert!(crate::domain::tracking::should_track(
+            "WindowsTerminal.exe"
+        ));
+        assert!(crate::domain::tracking::should_track("wt.exe"));
+        assert!(crate::domain::tracking::should_track("conhost.exe"));
+        assert!(crate::domain::tracking::should_track("OpenConsole.exe"));
     }
 
     #[test]

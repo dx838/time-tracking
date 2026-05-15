@@ -26,7 +26,41 @@ export function isTrackableWindow(
 ) {
   if (!win?.exeName) return false;
   if (win.isAfk) return false;
+  if (isDesktopShellWindow(win)) return false;
+  if (!isTrackableExplorerWindow(win)) return false;
   return shouldTrack(win.exeName);
+}
+
+function isDesktopShellWindow(win: TrackedWindow) {
+  const windowClass = win.windowClass.toLowerCase();
+  const exeName = win.exeName.toLowerCase();
+  const hasTitle = win.title.trim().length > 0;
+  if (
+    !hasTitle
+    && (
+      exeName === "ui32.exe"
+      || exeName === "wallpaper32.exe"
+      || exeName === "wallpaper64.exe"
+      || exeName === "wallpaperengine.exe"
+    )
+  ) {
+    return true;
+  }
+
+  return (
+    windowClass === "progman"
+    || windowClass === "workerw"
+    || windowClass === "shelldll_defview"
+    || windowClass === "syslistview32"
+    || windowClass === "shell_traywnd"
+    || windowClass === "shell_secondarytraywnd"
+  );
+}
+
+function isTrackableExplorerWindow(win: TrackedWindow) {
+  if (win.exeName.toLowerCase() !== "explorer.exe") return true;
+  const windowClass = win.windowClass.toLowerCase();
+  return windowClass === "cabinetwclass" || windowClass === "explorewclass";
 }
 
 export function resolveWindowSessionIdentity(

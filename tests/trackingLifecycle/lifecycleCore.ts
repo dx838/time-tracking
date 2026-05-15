@@ -72,6 +72,50 @@ export function runLifecycleCoreTests() {
     assert.equal(isTrackableWindow(chromeWindow, shouldTrack), true);
   });
 
+  runTest("file explorer windows are trackable but desktop shell is not", () => {
+    assert.equal(isTrackableWindow(makeWindow({
+      exeName: "explorer.exe",
+      processPath: "C:\\Windows\\explorer.exe",
+      windowClass: "CabinetWClass",
+      title: "Downloads",
+    }), shouldTrack), true);
+
+    assert.equal(isTrackableWindow(makeWindow({
+      exeName: "explorer.exe",
+      processPath: "C:\\Windows\\explorer.exe",
+      windowClass: "Progman",
+      title: "Program Manager",
+    }), shouldTrack), false);
+
+    assert.equal(isTrackableWindow(makeWindow({
+      exeName: "explorer.exe",
+      processPath: "C:\\Windows\\explorer.exe",
+      windowClass: "Shell_TrayWnd",
+      title: "",
+    }), shouldTrack), false);
+
+    assert.equal(isTrackableWindow(makeWindow({
+      exeName: "ui32.exe",
+      processPath: "C:\\Program Files (x86)\\Steam\\steamapps\\common\\wallpaper_engine\\ui32.exe",
+      windowClass: "WorkerW",
+      title: "",
+    }), shouldTrack), false);
+
+    assert.equal(isTrackableWindow(makeWindow({
+      exeName: "ui32.exe",
+      processPath: "C:\\Program Files (x86)\\Steam\\steamapps\\common\\wallpaper_engine\\ui32.exe",
+      windowClass: "Chrome_WidgetWin_1",
+      title: "",
+    }), shouldTrack), false);
+
+    assert.equal(isTrackableWindow(makeWindow({
+      exeName: "ui32.exe",
+      processPath: "C:\\Program Files (x86)\\Steam\\steamapps\\common\\wallpaper_engine\\ui32.exe",
+      windowClass: "Chrome_WidgetWin_1",
+      title: "Wallpaper Engine",
+    }), shouldTrack), true);
+  });
+
   runTest("afk transition backdates end time and does not start a new session", () => {
     const nowMs = 1_000_000;
     const result = planWindowTransition({

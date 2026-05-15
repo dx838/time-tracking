@@ -47,14 +47,21 @@ impl WindowSessionIdentity {
 pub struct WindowTrackingCandidate<'a> {
     pub exe_name: &'a str,
     pub title: &'a str,
+    pub window_class: &'a str,
     pub is_afk: bool,
 }
 
 impl<'a> WindowTrackingCandidate<'a> {
-    pub fn from_window_fields(exe_name: &'a str, title: &'a str, is_afk: bool) -> Self {
+    pub fn from_window_fields(
+        exe_name: &'a str,
+        title: &'a str,
+        window_class: &'a str,
+        is_afk: bool,
+    ) -> Self {
         Self {
             exe_name,
             title,
+            window_class,
             is_afk,
         }
     }
@@ -68,5 +75,7 @@ pub fn is_trackable_window(window: Option<WindowTrackingCandidate<'_>>) -> bool 
     !window.exe_name.is_empty()
         && !window.is_afk
         && super::should_track(window.exe_name)
+        && !super::is_desktop_shell_window(window)
+        && super::is_trackable_explorer_window(window)
         && !super::is_lifecycle_utility_window(window)
 }
