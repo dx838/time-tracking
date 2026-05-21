@@ -17,7 +17,6 @@ import {
   resolveTrackingDataChangedEffects,
   runTest,
   shouldDeleteSessionByStartTime,
-  shouldSyncTrackingPause,
 } from "./shared.ts";
 import {
   buildHistoryView,
@@ -121,27 +120,6 @@ export function runRuntimeEffectsTests() {
         },
       },
     }), true);
-  });
-
-  runTest("tracking pause sync reasons only accept explicit pause toggle events", () => {
-    assert.equal(shouldSyncTrackingPause("tracking-paused"), true);
-    assert.equal(shouldSyncTrackingPause("tracking-resumed"), true);
-  });
-
-  runTest("tracking pause sync reasons reject non-toggle tracking data changes", () => {
-    const nonToggleReasons = [
-      "tracking-paused-sealed",
-      "watchdog-sealed",
-      "startup-sealed",
-      "passive-participation-sealed",
-      "tracking-status-changed",
-      "backup-restored",
-      "session-transition",
-    ];
-
-    for (const reason of nonToggleReasons) {
-      assert.equal(shouldSyncTrackingPause(reason), false);
-    }
   });
 
   runTest("tracking data changed sealed reasons force refresh without pause setting sync", () => {

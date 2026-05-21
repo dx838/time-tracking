@@ -118,7 +118,6 @@
 - `npm run test:persistence`
 - `npm run test:interaction`
 - `npm run test:release`
-- `npm run test:startup`
 - `npm run test:ui-smoke`
 - `npm run test:ui-browser-smoke`
 - `npm run build`

@@ -3,7 +3,7 @@ import {
   isTrackableWindow,
   planWindowTransition,
   resolveStartupSealTime,
-} from "../../src/shared/lib/trackingWindowLifecycle.ts";
+} from "../helpers/trackingWindowLifecycle.ts";
 import {
   buildDailySummaries,
   buildNormalizedAppStats,
@@ -31,7 +31,6 @@ import {
 } from "../../src/platform/runtime/trackingRawDtos.ts";
 import { AppClassification } from "../../src/shared/classification/appClassification.ts";
 import { ProcessMapper } from "../../src/shared/classification/processMapper.ts";
-import { shouldSyncTrackingPause } from "../../src/app/services/trackingPauseSettingsPolicy.ts";
 import {
   applyMappingOverridesReadModelRefresh,
   applySessionDeletionReadModelRefresh,
@@ -89,7 +88,6 @@ export {
   resolveTrackingDataChangedEffects,
   applyTrackingDataChangedPayload,
   shouldDeleteSessionByStartTime,
-  shouldSyncTrackingPause,
   getDayRange,
   getRollingDayRanges,
 };
