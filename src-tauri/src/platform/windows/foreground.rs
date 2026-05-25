@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::ffi::OsString;
 use std::os::windows::prelude::OsStringExt;
 use std::sync::atomic::{AtomicU64, Ordering};
-use windows::Win32::Foundation::{CloseHandle, HWND};
+use windows::Win32::Foundation::{CloseHandle, HANDLE, HWND};
 use windows::Win32::System::Diagnostics::ToolHelp::{
     CreateToolhelp32Snapshot, Process32FirstW, Process32NextW, PROCESSENTRY32W, TH32CS_SNAPPROCESS,
 };
@@ -12,9 +12,9 @@ use windows::Win32::System::Threading::{
 };
 use windows::Win32::UI::Input::KeyboardAndMouse::{GetLastInputInfo, LASTINPUTINFO};
 use windows::Win32::UI::WindowsAndMessaging::{
-    GetAncestor, GetClassNameW, GetForegroundWindow, GetWindow, GetWindowLongPtrW,
-    GetWindowTextW, GetWindowThreadProcessId, IsIconic, IsWindow, IsWindowVisible, GA_ROOTOWNER,
-    GW_OWNER, GWL_EXSTYLE, WS_EX_TOOLWINDOW,
+    GetAncestor, GetClassNameW, GetForegroundWindow, GetWindow, GetWindowLongPtrW, GetWindowTextW,
+    GetWindowThreadProcessId, IsIconic, IsWindow, IsWindowVisible, GA_ROOTOWNER, GWL_EXSTYLE,
+    GW_OWNER, WS_EX_TOOLWINDOW,
 };
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -220,42 +220,67 @@ pub fn get_process_exe_name(process_id: u32) -> String {
 }
 
 fn get_process_details(process_id: u32) -> (String, String) {
-    let fallback_exe_name =
-        unsafe { get_process_name_from_snapshot(process_id) }.unwrap_or_default();
+    if let Some(process_path) = unsafe { get_process_path_from_handle(process_id) } {
+        if let Some(exe_name) = extract_exe_name_from_process_path(&process_path) {
+            return (exe_name, process_path);
+        }
 
-    let handle = match unsafe { OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, process_id) }
-    {
-        Ok(h) => h,
-        Err(_) => return (fallback_exe_name, String::new()),
-    };
+        return resolve_process_details(Some(process_path), unsafe {
+            get_process_name_from_snapshot(process_id)
+        });
+    }
 
+    resolve_process_details(None, unsafe { get_process_name_from_snapshot(process_id) })
+}
+
+unsafe fn get_process_path_from_handle(process_id: u32) -> Option<String> {
+    let handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, process_id).ok()?;
+    let path = query_process_image_path(handle);
+    let _ = CloseHandle(handle);
+    path
+}
+
+unsafe fn query_process_image_path(handle: HANDLE) -> Option<String> {
     let mut buffer = [0u16; 1024];
     let mut size = buffer.len() as u32;
-    let success = unsafe {
-        QueryFullProcessImageNameW(
-            handle,
-            PROCESS_NAME_WIN32,
-            windows::core::PWSTR(buffer.as_mut_ptr()),
-            &mut size,
-        )
-    };
-    let _ = unsafe { CloseHandle(handle) };
+    QueryFullProcessImageNameW(
+        handle,
+        PROCESS_NAME_WIN32,
+        windows::core::PWSTR(buffer.as_mut_ptr()),
+        &mut size,
+    )
+    .ok()?;
 
-    if success.is_ok() {
-        let path = OsString::from_wide(&buffer[..size as usize])
+    if size == 0 {
+        return None;
+    }
+
+    Some(
+        OsString::from_wide(&buffer[..size as usize])
             .to_string_lossy()
-            .into_owned();
+            .into_owned(),
+    )
+}
 
-        // Extract just the exe name from the full path
-        let exe_name = std::path::Path::new(&path)
-            .file_name()
-            .map(|n| n.to_string_lossy().into_owned())
-            .filter(|n| !n.is_empty())
-            .unwrap_or(fallback_exe_name);
+fn extract_exe_name_from_process_path(path: &str) -> Option<String> {
+    std::path::Path::new(path)
+        .file_name()
+        .map(|name| name.to_string_lossy().into_owned())
+        .filter(|name| !name.trim().is_empty())
+}
 
-        (exe_name, path)
-    } else {
-        (fallback_exe_name, String::new())
+fn resolve_process_details(
+    process_path: Option<String>,
+    fallback_exe_name: Option<String>,
+) -> (String, String) {
+    match process_path.filter(|path| !path.trim().is_empty()) {
+        Some(path) => (
+            extract_exe_name_from_process_path(&path)
+                .or(fallback_exe_name)
+                .unwrap_or_default(),
+            path,
+        ),
+        None => (fallback_exe_name.unwrap_or_default(), String::new()),
     }
 }
 
@@ -303,7 +328,8 @@ pub fn get_current_active_window() -> WindowInfo {
 #[cfg(test)]
 mod tests {
     use super::{
-        build_inactive_window, has_resolved_window_process, is_application_top_level_window,
+        build_inactive_window, extract_exe_name_from_process_path, has_resolved_window_process,
+        is_application_top_level_window, resolve_process_details,
         should_treat_shell_surface_as_inactive, should_treat_window_as_inactive,
     };
     use windows::Win32::Foundation::HWND;
@@ -330,6 +356,38 @@ mod tests {
         assert!(!has_resolved_window_process(0, ""));
         assert!(!has_resolved_window_process(42, ""));
         assert!(has_resolved_window_process(42, "Code.exe"));
+    }
+
+    #[test]
+    fn process_path_exe_name_extracts_windows_file_names() {
+        assert_eq!(
+            extract_exe_name_from_process_path(r"C:\Windows\explorer.exe").as_deref(),
+            Some("explorer.exe")
+        );
+        assert_eq!(
+            extract_exe_name_from_process_path(r"C:\Program Files\App\App.exe").as_deref(),
+            Some("App.exe")
+        );
+    }
+
+    #[test]
+    fn process_details_prefers_handle_path_exe_name() {
+        let (exe_name, process_path) = resolve_process_details(
+            Some(r"C:\Program Files\App\App.exe".to_string()),
+            Some("Fallback.exe".to_string()),
+        );
+
+        assert_eq!(exe_name, "App.exe");
+        assert_eq!(process_path, r"C:\Program Files\App\App.exe");
+    }
+
+    #[test]
+    fn process_details_uses_snapshot_name_when_handle_path_is_missing() {
+        let (exe_name, process_path) =
+            resolve_process_details(None, Some("Fallback.exe".to_string()));
+
+        assert_eq!(exe_name, "Fallback.exe");
+        assert!(process_path.is_empty());
     }
 
     #[test]

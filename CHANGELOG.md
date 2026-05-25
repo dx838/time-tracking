@@ -36,6 +36,32 @@ App note en: TBD.
 
 - 暂无。
 
+## [1.1.2] - 2026-05-25
+
+Release: 降低前台窗口采样开销，减少特定 Windows 场景下 CPU 异常占用风险。
+App note: 降低 CPU 异常占用风险。
+App note en: Reduced CPU spike risk.
+
+### Added
+
+- 暂无。
+
+### Changed
+
+- 暂无。
+
+### Fixed
+
+- 降低前台窗口采样中进程路径查询的 CPU 成本，避免每秒固定扫描全量进程列表，减少特定 Windows 场景下 CPU 异常占用的风险（[#2](https://github.com/Ceceliaee/time-tracking/issues/2)）。
+
+### Removed
+
+- 暂无。
+
+### Internal
+
+- 补充 Windows 前台进程详情解析测试，覆盖路径提取、主路径优先和 snapshot fallback 行为。
+
 ## [1.1.1] - 2026-05-25
 
 Release: 修复中文自定义分类在重新加载后显示为编码乱码的问题。
