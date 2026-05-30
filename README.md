@@ -9,15 +9,19 @@ Local-first time tracking for Windows desktop work.
 English · [简体中文](README.zh-CN.md)
 
 ![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-4f6f8f)
-[![Built with Tauri](https://img.shields.io/badge/built%20with-Tauri%20v2-4f7f8f)](https://tauri.app/)
+![Built with Tauri](https://img.shields.io/badge/built%20with-Tauri%20v2-4f7f8f)
 ![Local first](https://img.shields.io/badge/data-local--first-5f7f68)
 [![Downloads](https://img.shields.io/github/downloads/Ceceliaee/time-tracking/total?label=downloads&color=b07a3a)](https://github.com/Ceceliaee/time-tracking/releases)
+[![Latest downloads](https://img.shields.io/github/downloads/Ceceliaee/time-tracking/latest/total?label=latest&color=8f6f4f)](https://github.com/Ceceliaee/time-tracking/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-6f647a)](LICENSE)
 
 </div>
 
 
-Time Tracker automatically records the foreground apps you actively use, then organizes that activity into today's overview, a historical timeline, long-term trends, and manageable app rules. It is not a team timesheet system; it is a quiet, trustworthy personal desktop time record built for long-term use.
+<p align="center">
+Time Tracker records foreground apps and organizes them into today's overview, a timeline, and long-term trends.<br>
+It is not a team timesheet system, but a quiet and trustworthy personal desktop time record.
+</p>
 
 ![Time Tracker dashboard](assets/readme/dashboard.png)
 

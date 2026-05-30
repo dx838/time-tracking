@@ -9,15 +9,19 @@
 [English](README.md) · 简体中文
 
 ![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-4f6f8f)
-[![Built with Tauri](https://img.shields.io/badge/built%20with-Tauri%20v2-4f7f8f)](https://tauri.app/)
+![Built with Tauri](https://img.shields.io/badge/built%20with-Tauri%20v2-4f7f8f)
 ![Local first](https://img.shields.io/badge/data-local--first-5f7f68)
 [![Downloads](https://img.shields.io/github/downloads/Ceceliaee/time-tracking/total?label=downloads&color=b07a3a)](https://github.com/Ceceliaee/time-tracking/releases)
+[![Latest downloads](https://img.shields.io/github/downloads/Ceceliaee/time-tracking/latest/total?label=latest&color=8f6f4f)](https://github.com/Ceceliaee/time-tracking/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-6f647a)](LICENSE)
 
 </div>
 
 
-Time Tracker 会自动记录你正在使用的前台应用，并把这些活动整理成今日概览、历史时间线、长期趋势和可管理的应用规则。它不是团队工时系统，而是一个安静、可信、适合长期使用的个人桌面时间记录工具。
+<p align="center">
+Time Tracker 自动记录前台应用，并整理成今日概览、历史时间线和长期趋势。<br>
+它不是团队工时系统，而是安静可信的个人桌面时间记录工具。
+</p>
 
 ![Time Tracker 今日概览](assets/readme.zh-CN/dashboard.png)
 
