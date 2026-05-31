@@ -9,10 +9,15 @@ use sqlx::{Pool, Sqlite};
 use tauri::{
     menu::{Menu, MenuEvent, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    AppHandle, Manager, Runtime, Window, WindowEvent,
+    AppHandle, Manager, Runtime, WebviewUrl, WebviewWindow, WebviewWindowBuilder, Window, WindowEvent,
 };
 
 pub(crate) const MAIN_WINDOW_LABEL: &str = "main";
+const MAIN_WINDOW_TITLE: &str = "Time Tracker";
+const MAIN_WINDOW_WIDTH: f64 = 1100.0;
+const MAIN_WINDOW_HEIGHT: f64 = 736.0;
+const MAIN_WINDOW_MIN_WIDTH: f64 = 900.0;
+const MAIN_WINDOW_MIN_HEIGHT: f64 = 636.0;
 const TRAY_ID: &str = "main";
 const TRAY_MENU_SHOW_ID: &str = "tray-show-main";
 const TRAY_MENU_TOGGLE_PAUSE_ID: &str = "tray-toggle-pause";
@@ -30,7 +35,27 @@ pub(crate) fn show_main_window<R: Runtime>(app: &AppHandle<R>) {
         let _ = window.show();
         let _ = window.unminimize();
         let _ = window.set_focus();
+    } else {
+        if let Err(error) = create_main_window(app) {
+            eprintln!("[tray] failed to create main window: {error}");
+        }
     }
+}
+
+fn create_main_window<R: Runtime>(app: &AppHandle<R>) -> Result<WebviewWindow<R>, tauri::Error> {
+    WebviewWindowBuilder::new(
+        app,
+        MAIN_WINDOW_LABEL,
+        WebviewUrl::App("index.html".into()),
+    )
+    .title(MAIN_WINDOW_TITLE)
+    .inner_size(MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
+    .min_inner_size(MAIN_WINDOW_MIN_WIDTH, MAIN_WINDOW_MIN_HEIGHT)
+    .resizable(true)
+    .decorations(false)
+    .transparent(true)
+    .center()
+    .build()
 }
 
 pub(crate) fn apply_tray_visibility<R: Runtime>(
@@ -138,7 +163,11 @@ pub(crate) fn handle_window_event<R: Runtime>(window: &Window<R>, event: &Window
         if should_redirect_close_to_tray(settings, exit_requested) {
             api.prevent_close();
             widget::close_widget_window(app);
-            let _ = window.hide();
+            if settings.should_release_webview_on_hide() {
+                let _ = window.close();
+            } else {
+                let _ = window.hide();
+            }
         }
         return;
     }
@@ -149,7 +178,11 @@ pub(crate) fn handle_window_event<R: Runtime>(window: &Window<R>, event: &Window
 
     if settings.minimize_behavior == MinimizeBehavior::Widget {
         let preferred_monitor = window.current_monitor().ok().flatten();
-        let _ = window.hide();
+        if settings.should_release_webview_on_hide() {
+            let _ = window.close();
+        } else {
+            let _ = window.hide();
+        }
         let app_handle = app.clone();
         tauri::async_runtime::spawn(async move {
             if let Err(error) = widget::show_widget_window(&app_handle, preferred_monitor).await {
