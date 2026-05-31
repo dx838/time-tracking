@@ -57,6 +57,7 @@ export interface ReleaseDefaultSettingsProfile {
   launchAtLogin: boolean;
   startMinimized: boolean;
   onboardingCompleted: boolean;
+  lightweightMode: boolean;
 }
 
 export const RELEASE_DEFAULT_SETTINGS: ReleaseDefaultSettingsProfile = {
@@ -75,4 +76,5 @@ export const RELEASE_DEFAULT_SETTINGS: ReleaseDefaultSettingsProfile = {
   launchAtLogin: true,
   startMinimized: true,
   onboardingCompleted: true,
+  lightweightMode: false,
 };
