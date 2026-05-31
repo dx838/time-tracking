@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 pub const DEFAULT_LAUNCH_AT_LOGIN: bool = true;
 pub const DEFAULT_START_MINIMIZED: bool = true;
+pub const DEFAULT_LIGHTWEIGHT_MODE: bool = false;
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
@@ -25,6 +26,7 @@ pub struct DesktopBehaviorSettings {
     pub minimize_behavior: MinimizeBehavior,
     pub launch_at_login: bool,
     pub start_minimized: bool,
+    pub lightweight_mode: bool,
 }
 
 impl Default for DesktopBehaviorSettings {
@@ -34,6 +36,7 @@ impl Default for DesktopBehaviorSettings {
             minimize_behavior: MinimizeBehavior::Widget,
             launch_at_login: DEFAULT_LAUNCH_AT_LOGIN,
             start_minimized: DEFAULT_START_MINIMIZED,
+            lightweight_mode: DEFAULT_LIGHTWEIGHT_MODE,
         }
     }
 }
@@ -66,11 +69,19 @@ impl DesktopBehaviorSettings {
         }
     }
 
+    pub fn with_lightweight_mode(self, lightweight_mode: bool) -> Self {
+        Self {
+            lightweight_mode,
+            ..self
+        }
+    }
+
     pub fn from_storage_values(
         close_behavior: Option<&str>,
         minimize_behavior: Option<&str>,
         launch_at_login: Option<&str>,
         start_minimized: Option<&str>,
+        lightweight_mode: Option<&str>,
     ) -> Self {
         let close_behavior = close_behavior.map(parse_close_behavior).unwrap_or_default();
         let minimize_behavior = minimize_behavior
@@ -82,10 +93,14 @@ impl DesktopBehaviorSettings {
         let start_minimized = start_minimized
             .map(|raw| parse_boolean_setting(raw, DEFAULT_START_MINIMIZED))
             .unwrap_or(DEFAULT_START_MINIMIZED);
+        let lightweight_mode = lightweight_mode
+            .map(|raw| parse_boolean_setting(raw, DEFAULT_LIGHTWEIGHT_MODE))
+            .unwrap_or(DEFAULT_LIGHTWEIGHT_MODE);
 
         Self::default()
             .with_desktop_behavior(close_behavior, minimize_behavior)
             .with_launch_behavior(launch_at_login, start_minimized)
+            .with_lightweight_mode(lightweight_mode)
     }
 
     pub fn should_keep_tray_visible(self) -> bool {
@@ -94,6 +109,10 @@ impl DesktopBehaviorSettings {
 
     pub fn should_start_minimized_on_autostart(self) -> bool {
         self.launch_at_login && self.start_minimized
+    }
+
+    pub fn should_release_webview_on_hide(self) -> bool {
+        self.lightweight_mode
     }
 }
 
@@ -126,7 +145,7 @@ mod tests {
     use super::{
         parse_boolean_setting, parse_close_behavior, parse_minimize_behavior, CloseBehavior,
         DesktopBehaviorSettings, MinimizeBehavior, DEFAULT_LAUNCH_AT_LOGIN,
-        DEFAULT_START_MINIMIZED,
+        DEFAULT_START_MINIMIZED, DEFAULT_LIGHTWEIGHT_MODE,
     };
 
     #[test]
@@ -156,18 +175,21 @@ mod tests {
         let defaults = DesktopBehaviorSettings::default();
         let updated = defaults
             .with_desktop_behavior(CloseBehavior::Tray, MinimizeBehavior::Taskbar)
-            .with_launch_behavior(false, true);
+            .with_launch_behavior(false, true)
+            .with_lightweight_mode(true);
 
         assert_eq!(updated.close_behavior, CloseBehavior::Tray);
         assert_eq!(updated.minimize_behavior, MinimizeBehavior::Taskbar);
         assert!(!updated.launch_at_login);
         assert!(updated.start_minimized);
+        assert!(updated.lightweight_mode);
         assert_eq!(defaults.launch_at_login, DEFAULT_LAUNCH_AT_LOGIN);
+        assert_eq!(defaults.lightweight_mode, DEFAULT_LIGHTWEIGHT_MODE);
     }
 
     #[test]
     fn from_storage_values_applies_defaults_and_domain_parsing() {
-        let defaults = DesktopBehaviorSettings::from_storage_values(None, None, None, None);
+        let defaults = DesktopBehaviorSettings::from_storage_values(None, None, None, None, None);
         assert_eq!(defaults, DesktopBehaviorSettings::default());
 
         let merged = DesktopBehaviorSettings::from_storage_values(
@@ -175,11 +197,13 @@ mod tests {
             Some("widget"),
             Some("no"),
             Some("invalid"),
+            Some("true"),
         );
         assert_eq!(merged.close_behavior, CloseBehavior::Tray);
         assert_eq!(merged.minimize_behavior, MinimizeBehavior::Widget);
         assert!(!merged.launch_at_login);
         assert_eq!(merged.start_minimized, DEFAULT_START_MINIMIZED);
+        assert!(merged.lightweight_mode);
     }
 
     #[test]
@@ -188,6 +212,7 @@ mod tests {
         assert!(defaults.should_keep_tray_visible());
         assert_eq!(defaults.minimize_behavior, MinimizeBehavior::Widget);
         assert!(defaults.should_start_minimized_on_autostart());
+        assert!(!defaults.should_release_webview_on_hide());
 
         let close_to_exit =
             defaults.with_desktop_behavior(CloseBehavior::Exit, MinimizeBehavior::Widget);
@@ -199,6 +224,9 @@ mod tests {
 
         let no_autostart_minimize = defaults.with_launch_behavior(false, true);
         assert!(!no_autostart_minimize.should_start_minimized_on_autostart());
+
+        let lightweight_mode_enabled = defaults.with_lightweight_mode(true);
+        assert!(lightweight_mode_enabled.should_release_webview_on_hide());
     }
 
     #[test]
