@@ -272,6 +272,8 @@ const ZH_CN_UI_TEXT = {
     startMinimizedLabel: "启动时最小化",
     startMinimizedHint: "仅对自启动生效：启动时按当前最小化行为收起。",
     appearanceTitle: "外观",
+    lightweightModeLabel: "轻量模式",
+    lightweightModeHint: "关闭窗口或最小化到托盘时释放 WebView 资源，减少内存占用。重新显示时会重新创建窗口。",
     themeModeOptions: {
       light: "浅色",
       dark: "深色",
@@ -747,6 +749,8 @@ const EN_US_UI_TEXT: UiText = {
     startMinimizedLabel: "Start minimized",
     startMinimizedHint: "Only applies to launch at login. Starts with the current minimize behavior.",
     appearanceTitle: "Appearance",
+    lightweightModeLabel: "Lightweight mode",
+    lightweightModeHint: "Release WebView resources when closing or minimizing to tray, reducing memory usage. The window will be recreated when shown again.",
     themeModeOptions: {
       light: "Light",
       dark: "Dark",
