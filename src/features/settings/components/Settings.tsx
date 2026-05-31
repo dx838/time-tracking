@@ -179,6 +179,8 @@ export default function Settings({
             onColorSchemeDarkChange={(nextColorScheme) => handleChange("colorSchemeDark", nextColorScheme)}
             onConfirmColorSchemeChange={handleSaveColorScheme}
             colorSchemeConfirming={saveStatus === "saving"}
+            lightweightMode={draftSettings.lightweightMode}
+            onLightweightModeChange={(nextLightweightMode) => handleChange("lightweightMode", nextLightweightMode)}
           />
 
           <SettingsResidentPanel
