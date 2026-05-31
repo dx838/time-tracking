@@ -2,6 +2,7 @@ import { ChevronRight, Palette } from "lucide-react";
 import { useState } from "react";
 import QuietDialog from "../../../shared/components/QuietDialog";
 import QuietSegmentedFilter from "../../../shared/components/QuietSegmentedFilter";
+import QuietSwitch from "../../../shared/components/QuietSwitch";
 import type { AppLanguage, ColorScheme, ThemeMode } from "../../../shared/settings/appSettings.ts";
 import {
   COLOR_SCHEME_OPTIONS,
@@ -20,6 +21,8 @@ type SettingsAppearancePanelProps = {
   onColorSchemeDarkChange: (nextColorScheme: ColorScheme) => void;
   onConfirmColorSchemeChange: (library: ThemeLibrary) => Promise<boolean>;
   colorSchemeConfirming: boolean;
+  lightweightMode: boolean;
+  onLightweightModeChange: (nextLightweightMode: boolean) => void;
 };
 
 export default function SettingsAppearancePanel({
@@ -33,6 +36,8 @@ export default function SettingsAppearancePanel({
   onColorSchemeDarkChange,
   onConfirmColorSchemeChange,
   colorSchemeConfirming,
+  lightweightMode,
+  onLightweightModeChange,
 }: SettingsAppearancePanelProps) {
   const [activeLibrary, setActiveLibrary] = useState<ThemeLibrary | null>(null);
   const [dialogSnapshot, setDialogSnapshot] = useState<{
@@ -140,6 +145,24 @@ export default function SettingsAppearancePanel({
               <ChevronRight size={14} aria-hidden="true" />
             </button>
           ))}
+        </div>
+      </div>
+
+      <div className="mt-5 space-y-5">
+        <div>
+          <label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--qp-text-tertiary)]">
+            {UI_TEXT.settings.lightweightModeLabel}
+          </label>
+          <div className="mt-2 flex items-start justify-between gap-4">
+            <p className="text-sm leading-relaxed text-[var(--qp-text-secondary)]">
+              {UI_TEXT.settings.lightweightModeHint}
+            </p>
+            <QuietSwitch
+              checked={lightweightMode}
+              onChange={onLightweightModeChange}
+              ariaLabel={UI_TEXT.settings.lightweightModeLabel}
+            />
+          </div>
         </div>
       </div>
 
