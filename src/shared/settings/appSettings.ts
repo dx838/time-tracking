@@ -51,6 +51,7 @@ export interface AppSettings {
   launchAtLogin: boolean;
   startMinimized: boolean;
   onboardingCompleted: boolean;
+  lightweightMode: boolean;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
